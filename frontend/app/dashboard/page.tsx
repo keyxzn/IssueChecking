@@ -165,10 +165,10 @@ export default function DashboardPage() {
   );
 
   const CARDS = [
-    { label:"Total Kandidat", val:total,                     sub:`${processing} diproses`,  icon:Users,      style:{ background:"var(--bg2)", border:"1px solid var(--border)" }, iStyle:{ background:"var(--bg3)", color:"var(--text3)" }, vColor:"var(--text)" },
-    { label:"Selesai",        val:completed,                 sub:"screening selesai",        icon:UserCheck,  style:{ background:"linear-gradient(135deg,#00c896 0%,#009e76 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff" },
-    { label:"High / Kritis",  val:risk.high+risk.critical,   sub:`${highPct}% dari total`,  icon:ShieldAlert, style:{ background:"linear-gradient(135deg,#ef4444 0%,#b91c1c 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff" },
-    { label:"Low Risk",       val:risk.low,                  sub:"aman dilanjutkan",         icon:TrendingUp,  style:{ background:"linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff" },
+    { label:"Total Kandidat", val:total,                     sub:`${processing} diproses`,  icon:Users,      style:{ background:"var(--bg2)", border:"1px solid var(--border)" }, iStyle:{ background:"var(--bg3)", color:"var(--text3)" }, vColor:"var(--text)", href:"/candidates" },
+    { label:"Selesai",        val:completed,                 sub:"screening selesai",        icon:UserCheck,  style:{ background:"linear-gradient(135deg,#00c896 0%,#009e76 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?status=completed" },
+    { label:"High / Kritis",  val:risk.high+risk.critical,   sub:`${highPct}% dari total`,  icon:ShieldAlert, style:{ background:"linear-gradient(135deg,#ef4444 0%,#b91c1c 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?risk=high" },
+    { label:"Low Risk",       val:risk.low,                  sub:"aman dilanjutkan",         icon:TrendingUp,  style:{ background:"linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?risk=low" },
   ];
 
   const fmt = (d:string) => new Date(d).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
@@ -196,25 +196,31 @@ export default function DashboardPage() {
         ) : (<>
 
         {/* Stat Cards */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:16, marginBottom:28 }} className="lg:grid-cols-4">
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:24 }}>
           {CARDS.map((c,i)=>(
-            <div key={c.label} className={`fade-up d${i+1}`} style={{
-              ...c.style as any, borderRadius:20, padding:"20px",
-              position:"relative", overflow:"hidden",
-            }}>
-              {i > 0 && <>
-                <div style={{ position:"absolute", right:-20, top:-20, width:90, height:90, borderRadius:"50%", background:"rgba(255,255,255,0.07)" }} />
-                <div style={{ position:"absolute", right:6, top:6, width:50, height:50, borderRadius:"50%", background:"rgba(255,255,255,0.05)" }} />
-              </>}
-              <div style={{ position:"relative" }}>
-                <div style={{ width:36, height:36, borderRadius:11, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16, ...c.iStyle as any }}>
-                  <c.icon size={15} />
+            <Link key={c.label} href={c.href} style={{ textDecoration:"none" }}>
+              <div className={`fade-up d${i+1}`} style={{
+                ...c.style as any, borderRadius:16, padding:"16px",
+                position:"relative", overflow:"hidden", cursor:"pointer",
+                transition:"transform 0.15s, box-shadow 0.15s",
+              }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLDivElement).style.transform="translateY(-2px)";(e.currentTarget as HTMLDivElement).style.boxShadow="0 8px 24px rgba(0,0,0,0.15)"}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLDivElement).style.transform="";(e.currentTarget as HTMLDivElement).style.boxShadow=""}}
+              >
+                {i > 0 && <>
+                  <div style={{ position:"absolute", right:-15, top:-15, width:70, height:70, borderRadius:"50%", background:"rgba(255,255,255,0.07)" }} />
+                  <div style={{ position:"absolute", right:5, top:5, width:40, height:40, borderRadius:"50%", background:"rgba(255,255,255,0.05)" }} />
+                </>}
+                <div style={{ position:"relative" }}>
+                  <div style={{ width:30, height:30, borderRadius:9, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12, ...c.iStyle as any }}>
+                    <c.icon size={13} />
+                  </div>
+                  <p style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:24, color:c.vColor, lineHeight:1 }}>{c.val}</p>
+                  <p style={{ fontSize:12, fontWeight:600, color:i===0?"var(--text)":"rgba(255,255,255,0.9)", marginTop:6 }}>{c.label}</p>
+                  <p style={{ fontSize:10.5, color:i===0?"var(--text3)":"rgba(255,255,255,0.45)", marginTop:1 }}>{c.sub}</p>
                 </div>
-                <p className="count-up" style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:30, color:c.vColor, lineHeight:1 }}>{c.val}</p>
-                <p style={{ fontSize:13, fontWeight:600, color:i===0?"var(--text)":"rgba(255,255,255,0.9)", marginTop:7 }}>{c.label}</p>
-                <p style={{ fontSize:11, color:i===0?"var(--text3)":"rgba(255,255,255,0.45)", marginTop:2 }}>{c.sub}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

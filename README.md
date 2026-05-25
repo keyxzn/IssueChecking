@@ -58,11 +58,11 @@ cp .env.example .env
 # Edit .env sesuai konfigurasi kamu
 
 # Jalankan backend
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8001
 ```
 
-Backend akan jalan di: http://localhost:8000  
-Dokumentasi API: http://localhost:8000/docs
+Backend akan jalan di: http://localhost:8001 
+Dokumentasi API: http://localhost:8001/docs
 
 ### 4. Setup Ollama (AI Lokal)
 
@@ -84,78 +84,7 @@ cd frontend
 npm install
 
 # Buat file environment
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+echo "NEXT_PUBLIC_API_URL=http://localhost:8001" > .env.local
 
 # Jalankan frontend
 npm run dev
-```
-
-Frontend akan jalan di: http://localhost:3000
-
----
-
-## Alur Kerja Aplikasi
-
-```
-HR isi form kandidat
-        ↓
-FastAPI terima request → simpan ke PostgreSQL
-        ↓
-Background task jalan:
-  ├── Google Search (googlesearch-python)
-  ├── Twitter scraping (Playwright)
-  ├── LinkedIn scraping (Playwright)
-  └── News scraping (googlesearch-python)
-        ↓
-Ollama + Llama3 analisis konten
-        ↓
-Hasil disimpan ke DB → tampil di dashboard
-```
-
----
-
-## Kategori Risiko yang Dicek
-
-| Kategori | Yang Dicek |
-|---|---|
-| Fraud / Scam | Penipuan, akun palsu |
-| Toxic Language | Kata kasar, bullying |
-| Hate Speech | Serangan ras, agama, gender |
-| Explicit Content | Konten vulgar/pornografi |
-| Violence | Ancaman kekerasan |
-| Extremism | Terorisme, kekerasan politik |
-| Professional Risk | Fraud kerja, fake profile |
-
----
-
-## Struktur Folder
-
-```
-hr-checker/
-├── frontend/               ← Next.js app
-│   ├── app/
-│   │   ├── screening/      ← Form input kandidat
-│   │   ├── candidates/     ← List semua kandidat
-│   │   └── candidates/[id] ← Detail & hasil screening
-│   ├── components/         ← Navbar, RiskBadge, dll
-│   └── lib/api.ts          ← API client
-│
-└── backend/                ← FastAPI app
-    └── app/
-        ├── api/routes/     ← candidates.py, reports.py
-        ├── services/
-        │   ├── scrapers.py         ← Google + Playwright
-        │   ├── ai_analyzer.py      ← Ollama + Llama3
-        │   ├── screening_service.py← Orchestrator utama
-        │   └── report_service.py   ← Export PDF
-        ├── models/         ← SQLAlchemy models
-        ├── schemas/        ← Pydantic schemas
-        └── core/           ← Config, database
-```
-
----
-
-## Legal & Etika
-
-✅ **Yang boleh:** Hanya data publik, kandidat sudah consent  
-❌ **Yang tidak boleh:** Akses akun privat, tanpa consent, diskriminasi

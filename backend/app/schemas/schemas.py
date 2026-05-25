@@ -30,6 +30,27 @@ class CandidateCreate(BaseModel):
             raise ValueError("Full name cannot be empty")
         return v.strip()
 
+    @field_validator("instagram_url", "twitter_url", "facebook_url", "linkedin_url", mode="before")
+    @classmethod
+    def empty_str_to_none(cls, v):
+        """Convert empty string or placeholder to None."""
+        if v is None:
+            return None
+        s = str(v).strip().lower()
+        if s in ("", "tidak ada", "none", "-", "n/a", "na"):
+            return None
+        return str(v).strip()
+
+    @field_validator("phone", mode="before")
+    @classmethod
+    def clean_phone(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if s in ("", "tidak ada", "none", "-"):
+            return None
+        return s
+
 
 class CandidateResponse(BaseModel):
     id: str

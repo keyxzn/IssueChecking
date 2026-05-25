@@ -9,7 +9,7 @@ import { api, Candidate, ScreeningReport } from "@/lib/api";
 import {
   ArrowLeft, Loader2, RefreshCw, Camera, MessageCircle,
   Globe, Link2, Newspaper, AlertTriangle, CheckCircle,
-  ShieldAlert, Mail, Phone, Clock,
+  ShieldAlert, Mail, Phone, Clock, ExternalLink,
 } from "lucide-react";
 
 const RISK_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
@@ -21,13 +21,39 @@ const RISK_LABELS: Record<string, { label: string; icon: string; desc: string }>
   professional_risk: { label: "Professional Risk",   icon: "💼", desc: "Fraud, scam, fake profile" },
 };
 
+/** Normalize URL sosmed → link https yang valid */
+function normalizeSocialUrl(url: string | undefined, platform: string): string | undefined {
+  if (!url || url.trim() === "" || url === "tidak ada") return undefined;
+  const u = url.trim();
+  if (u.startsWith("http://") || u.startsWith("https://")) return u;
+  const handle = u.replace(/^@/, "");
+  switch (platform) {
+    case "instagram": return `https://www.instagram.com/${handle}/`;
+    case "twitter":   return `https://x.com/${handle}`;
+    case "facebook":  return `https://www.facebook.com/${handle}`;
+    case "linkedin":  return `https://www.linkedin.com/in/${handle}`;
+    default:          return `https://${u}`;
+  }
+}
+
 const PLATFORM_ICONS: Record<string, React.ElementType> = {
-  instagram: Camera,
-  twitter:   MessageCircle,
-  facebook:  Globe,
-  linkedin:  Link2,
-  google:    Globe,
-  news:      Newspaper,
+  instagram:      Camera,
+  twitter:        MessageCircle,
+  facebook:       Globe,
+  linkedin:       Link2,
+  google:         Globe,
+  google_results: Globe,
+  news:           Newspaper,
+};
+
+const PLATFORM_COLORS: Record<string, string> = {
+  instagram:      "#e1306c",
+  twitter:        "#1d9bf0",
+  facebook:       "#1877f2",
+  linkedin:       "#0077b5",
+  google:         "#4285f4",
+  google_results: "#4285f4",
+  news:           "#6b7280",
 };
 
 function ScoreBar({ score }: { score: number }) {
@@ -100,11 +126,11 @@ export default function CandidateDetailPage() {
   const overallRisk = report?.overall_risk ?? "low";
 
   const socials = [
-    { url: candidate?.instagram_url, Icon: Camera,       color: "#e1306c", label: "Instagram" },
-    { url: candidate?.twitter_url,   Icon: MessageCircle,color: "#1d9bf0", label: "Twitter/X" },
-    { url: candidate?.facebook_url,  Icon: Globe,        color: "#1877f2", label: "Facebook"  },
-    { url: candidate?.linkedin_url,  Icon: Link2,        color: "#0077b5", label: "LinkedIn"  },
-  ].filter(x => x.url && x.url !== "tidak ada");
+    { url: normalizeSocialUrl(candidate?.instagram_url, "instagram"), Icon: Camera,        color: "#e1306c", label: "Instagram" },
+    { url: normalizeSocialUrl(candidate?.twitter_url,   "twitter"),   Icon: MessageCircle, color: "#1d9bf0", label: "Twitter/X" },
+    { url: normalizeSocialUrl(candidate?.facebook_url,  "facebook"),  Icon: Globe,         color: "#1877f2", label: "Facebook"  },
+    { url: normalizeSocialUrl(candidate?.linkedin_url,  "linkedin"),  Icon: Link2,         color: "#0077b5", label: "LinkedIn"  },
+  ].filter(x => x.url);
 
   return (
     <AppLayout>
@@ -295,20 +321,31 @@ export default function CandidateDetailPage() {
                       <p style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>Profil Ditemukan</p>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {Object.entries(profiles).map(([platform, url]) => {
-                          const Icon = PLATFORM_ICONS[platform.toLowerCase()] ?? Globe;
+                          const key = platform.toLowerCase();
+                          const Icon  = PLATFORM_ICONS[key] ?? Globe;
+                          const color = PLATFORM_COLORS[key] ?? "var(--accent)";
+                          const normalizedUrl = normalizeSocialUrl(url as string, key) ?? (url as string);
+                          const displayHandle = (() => {
+                            try {
+                              const u = new URL(normalizedUrl);
+                              const parts = u.pathname.replace(/\//g, " ").trim().split(" ").filter(Boolean);
+                              return "@" + parts[parts.length - 1];
+                            } catch { return url as string; }
+                          })();
+                          const platformLabel = key === "google_results" ? "Google" : key.charAt(0).toUpperCase() + key.slice(1);
                           return (
-                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" style={{
+                            <a key={platform} href={normalizedUrl} target="_blank" rel="noopener noreferrer" style={{
                               display: "flex", alignItems: "center", gap: 12,
                               padding: "10px 14px", borderRadius: 12,
                               background: "var(--bg3)", border: "1px solid var(--border)",
                               textDecoration: "none", transition: "all 0.15s",
                             }}
-                              onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "var(--accent-d)"; }}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = "var(--accent-d)"; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg3)"; }}
                             >
-                              <Icon size={15} style={{ color: "var(--accent)", flexShrink: 0 }} />
-                              <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)", flex: 1 }}>{platform}</span>
-                              <span style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{url}</span>
+                              <Icon size={15} style={{ color, flexShrink: 0 }} />
+                              <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)", flex: 1 }}>{platformLabel}</span>
+                              <span style={{ fontSize: 11.5, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{displayHandle}</span>
                             </a>
                           );
                         })}
@@ -356,20 +393,53 @@ export default function CandidateDetailPage() {
                     </div>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      {flagged.map((f, i) => (
-                        <div key={i} style={{
-                          padding: "14px 16px", borderRadius: 14,
-                          background: "var(--danger-d)", border: "1px solid rgba(239,68,68,0.15)",
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                            <AlertTriangle size={13} style={{ color: "var(--danger)", flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)" }}>{f.platform}</span>
-                            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: "rgba(239,68,68,0.12)", color: "var(--danger)", fontWeight: 600 }}>{f.category}</span>
-                            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: "var(--bg3)", color: "var(--text3)", fontWeight: 600, marginLeft: "auto" }}>{f.severity}</span>
+                      {flagged.map((f, i) => {
+                        const platformColor: Record<string, string> = {
+                          instagram: "#e1306c", twitter: "#1d9bf0", facebook: "#1877f2",
+                          linkedin: "#0077b5", "google search": "#4285f4", "berita media": "#f59e0b",
+                          google: "#4285f4", news: "#f59e0b",
+                        };
+                        const pKey = (f.platform ?? "").toLowerCase();
+                        const pColor = platformColor[pKey] ?? "var(--danger)";
+                        const hasUrl = f.source_url && f.source_url.startsWith("http");
+                        return (
+                          <div key={i} style={{
+                            padding: "14px 16px", borderRadius: 14,
+                            background: "var(--danger-d)", border: "1px solid rgba(239,68,68,0.15)",
+                            transition: "border-color 0.15s",
+                          }}>
+                            {/* Header row */}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <AlertTriangle size={13} style={{ color: "var(--danger)", flexShrink: 0 }} />
+                              <span style={{ fontSize: 12, fontWeight: 700, color: pColor, textTransform: "capitalize" }}>{f.platform}</span>
+                              <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: "rgba(239,68,68,0.12)", color: "var(--danger)", fontWeight: 600 }}>{f.category}</span>
+                              <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 99, background: "var(--bg3)", color: "var(--text3)", fontWeight: 600, marginLeft: "auto" }}>{f.severity}</span>
+                            </div>
+                            {/* Snippet */}
+                            <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, marginBottom: hasUrl ? 10 : 0 }}>{f.content_snippet}</p>
+                            {/* Evidence button */}
+                            {hasUrl && (
+                              <a
+                                href={f.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  display: "inline-flex", alignItems: "center", gap: 5,
+                                  padding: "5px 12px", borderRadius: 8,
+                                  background: "var(--bg3)", border: `1px solid ${pColor}40`,
+                                  color: pColor, fontSize: 11.5, fontWeight: 600,
+                                  textDecoration: "none", transition: "all 0.15s",
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = pColor + "18"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "var(--bg3)"; }}
+                              >
+                                <ExternalLink size={11} />
+                                Lihat Bukti
+                              </a>
+                            )}
                           </div>
-                          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6 }}>{f.content_snippet}</p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>

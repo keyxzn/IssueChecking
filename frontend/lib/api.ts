@@ -4,7 +4,10 @@ function getToken(): string {
   if (typeof window === "undefined") return "";
   try {
     const u = localStorage.getItem("hr_user");
-    return u ? JSON.parse(u).token : "";
+    if (!u) return "";
+    const parsed = JSON.parse(u);
+    // Support both {token: "..."} and {access_token: "..."}
+    return parsed.token ?? parsed.access_token ?? "";
   } catch { return ""; }
 }
 
@@ -30,13 +33,13 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
 }
 
 export interface CandidateCreate {
-  full_name: string; email: string; phone: string;
+  full_name: string; email: string; phone?: string;
   linkedin_url?: string; instagram_url?: string;
   twitter_url?: string; facebook_url?: string;
   consent_given: boolean;
 }
 export interface Candidate {
-  id: string; full_name: string; email: string; phone: string;
+  id: string; full_name: string; email: string; phone?: string;
   linkedin_url?: string; instagram_url?: string;
   twitter_url?: string; facebook_url?: string; created_at: string;
 }
@@ -46,7 +49,10 @@ export interface ScreeningReport {
   overall_risk?: "low" | "medium" | "high" | "critical";
   risk_scores?: Record<string, number>;
   found_profiles?: Record<string, string>;
-  flagged_content?: Array<{ platform: string; content_snippet: string; category: string; severity: string }>;
+  flagged_content?: Array<{
+    platform: string; content_snippet: string;
+    category: string; severity: string; source_url?: string;
+  }>;
   ai_summary?: string; error_message?: string;
   created_at: string; completed_at?: string;
 }

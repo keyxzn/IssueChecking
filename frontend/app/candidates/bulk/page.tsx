@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import AppLayout from "@/components/AppLayout";
+import { api } from "@/lib/api";
 import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, X, Zap, Shield, Globe, Camera, MessageCircle, Link2, Newspaper, Search, ArrowRight } from "lucide-react";
 
 interface BulkRow { full_name:string; email:string; phone:string; instagram_url:string; twitter_url:string; facebook_url:string; linkedin_url:string; }
@@ -38,10 +39,31 @@ export default function BulkPage() {
       const buf  = await f.arrayBuffer();
       const wb   = XLSX.read(buf);
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<BulkRow>(ws);
-      if (rows.length===0) { setError("File kosong atau format tidak sesuai."); return; }
+      const raw  = XLSX.utils.sheet_to_json<Record<string,string>>(ws);
+      if (raw.length===0) { setError("File kosong atau format tidak sesuai."); return; }
+      const rows = raw.map(normalizeRow);
       setPreview(rows.slice(0,5));
     } catch { setError("Gagal membaca file. Pastikan format sesuai template."); }
+  }
+
+  /** Normalize berbagai format header CSV → BulkRow */
+  function normalizeRow(r: Record<string,string>): BulkRow {
+    const g = (...keys:string[]) => {
+      for (const k of keys) {
+        const found = Object.keys(r).find(h => h.toLowerCase().replace(/[^a-z0-9]/g,"") === k.toLowerCase().replace(/[^a-z0-9]/g,""));
+        if (found && r[found]) return r[found];
+      }
+      return "";
+    };
+    return {
+      full_name:     g("full_name","nama","name","fullname","nama_lengkap"),
+      email:         g("email","e_mail","emailaddress"),
+      phone:         g("phone","hp","no_hp","telepon","telp","nohp","phonenumber","no_telepon"),
+      instagram_url: g("instagram_url","instagram","ig","instagram_url"),
+      twitter_url:   g("twitter_url","twitter","x","twitter_x"),
+      facebook_url:  g("facebook_url","facebook","fb"),
+      linkedin_url:  g("linkedin_url","linkedin","li"),
+    };
   }
 
   function downloadTemplate() {
@@ -62,15 +84,14 @@ export default function BulkPage() {
       const buf  = await file.arrayBuffer();
       const wb   = XLSX.read(buf);
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<BulkRow>(ws);
-      const BASE  = process.env.NEXT_PUBLIC_API_URL??"http://localhost:8000";
-      const token = JSON.parse(localStorage.getItem("hr_user")||"{}").token??"";
+      const raw  = XLSX.utils.sheet_to_json<Record<string,string>>(ws);
+      const rows = raw.map(normalizeRow).filter(r => r.full_name && r.email);
+      if (rows.length === 0) { setError("Tidak ada data valid. Pastikan kolom Nama dan Email terisi."); setLoading(false); return; }
+
       for (const row of rows) {
-        await fetch(`${BASE}/api/v1/candidates/`,{
-          method:"POST",
-          headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},
-          body:JSON.stringify({...row,consent_given:true}),
-        });
+        try {
+          await api.createCandidate({ ...row, consent_given: true });
+        } catch { /* lanjut ke kandidat berikutnya */ }
       }
       setDone(true);
     } catch { setError("Terjadi kesalahan saat upload."); }

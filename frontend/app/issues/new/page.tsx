@@ -24,7 +24,7 @@ import {
 import Link from "next/link";
 import { api } from "@/lib/api";
 
-export default function NewIssuePage() {
+export default function NewCandidatePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -46,9 +46,9 @@ export default function NewIssuePage() {
     setLoading(true);
 
     try {
-      const issue = await api.createIssue(form);
+      const candidate = await api.createIssue(form);
 
-      router.push(`/issues/${issue.id}`);
+      router.push(`/issues/${candidate.id}`);
     } finally {
       setLoading(false);
     }

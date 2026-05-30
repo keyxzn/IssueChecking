@@ -70,7 +70,7 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-export default function IssuesDetailPage() {
+export default function CandidateDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [issue, setIssue] = useState<Issue | null| null>(null);
@@ -94,7 +94,7 @@ export default function IssuesDetailPage() {
   };
 
   const handleDownload = async () => {
-    if (!issue || !report) return;
+    if (!candidate || !report) return;
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
@@ -472,10 +472,10 @@ export default function IssuesDetailPage() {
   const overallRisk = report?.overall_risk ?? "low";
 
   const socials = [
-    { url: normalizeSocialUrl(issue?.instagram_url, "instagram"), Icon: Camera,        color: "#e1306c", label: "Instagram" },
-    { url: normalizeSocialUrl(issue?.twitter_url,   "twitter"),   Icon: MessageCircle, color: "#1d9bf0", label: "Twitter/X" },
-    { url: normalizeSocialUrl(issue?.facebook_url,  "facebook"),  Icon: Globe,         color: "#1877f2", label: "Facebook"  },
-    { url: normalizeSocialUrl(issue?.twitter_url,  "twitter"),  Icon: Link2,         color: "#0077b5", label: "LinkedIn"  },
+    { url: normalizeSocialUrl(candidate?.instagram_url, "instagram"), Icon: Camera,        color: "#e1306c", label: "Instagram" },
+    { url: normalizeSocialUrl(candidate?.twitter_url,   "twitter"),   Icon: MessageCircle, color: "#1d9bf0", label: "Twitter/X" },
+    { url: normalizeSocialUrl(candidate?.facebook_url,  "facebook"),  Icon: Globe,         color: "#1877f2", label: "Facebook"  },
+    { url: normalizeSocialUrl(candidate?.twitter_url,  "twitter"),  Icon: Link2,         color: "#0077b5", label: "LinkedIn"  },
   ].filter(x => x.url);
 
   return (
@@ -513,21 +513,21 @@ export default function IssuesDetailPage() {
                 fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 22, color: "#04130f",
                 boxShadow: "0 6px 20px var(--accent-g)",
               }}>
-                {issue?.keyword.charAt(0).toUpperCase()}
+                {candidate?.keyword.charAt(0).toUpperCase()}
               </div>
 
               <div>
                 <h1 style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 22, color: "var(--text)", letterSpacing: "-0.03em", marginBottom: 6 }}>
-                  {issue?.keyword}
+                  {candidate?.keyword}
                 </h1>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginBottom: 10 }}>
                   <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--text3)" }}>
                     <Mail size={12} style={{ color: "var(--accent)" }} />
-                    {issue?.email}
+                    {candidate?.email}
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, color: "var(--text3)" }}>
                     <Phone size={12} style={{ color: "var(--accent)" }} />
-                    {issue?.phone}
+                    {candidate?.phone}
                   </span>
                 </div>
                 {/* Socials */}

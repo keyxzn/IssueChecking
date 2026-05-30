@@ -171,6 +171,8 @@ function Body({ onNav, collapsed }: BodyProps) {
         <div style={{ display: "flex", alignItems: "center", gap: collapsed ? 0 : 10, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "8px 12px" : "9px 12px", borderRadius: 11, background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.07)", marginBottom: 4 }}>
           <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#38bdf8,#0284c7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff" }}>
             {user?.name ? user.name.charAt(0).toUpperCase() : "?"}
+<<<<<<< HEAD
+=======
           </div>
           {!collapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -309,6 +311,7 @@ export default function Sidebar() {
         <div style={{ display: "flex", alignItems: "center", gap: collapsed ? 0 : 10, justifyContent: collapsed ? "center" : "flex-start", padding: collapsed ? "8px 12px" : "9px 12px", borderRadius: 11, background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.07)", marginBottom: 4 }}>
           <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg,#38bdf8,#0284c7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 12, fontWeight: 800, color: "#fff" }}>
             {user?.name?.charAt(0).toUpperCase() ?? "?"}
+>>>>>>> 2cf817d479005fcacfabb3e277b20c7126577650
           </div>
           {!collapsed && (
             <div style={{ flex: 1, minWidth: 0 }}>

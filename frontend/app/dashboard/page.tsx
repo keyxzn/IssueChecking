@@ -3,26 +3,26 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import RiskBadge from "@/components/RiskBadge";
-import { api, Candidate, ScreeningReport } from "@/lib/api";
+import { api, Issue, MonitoringReport } from "@/lib/api";
 import {
   Users, ShieldAlert, TrendingUp, Plus, ArrowRight,
   Clock, CheckCircle, Loader2, Activity, Shield, UserCheck,
   AlertTriangle, Zap, BarChart2
 } from "lucide-react";
 
-type Row = Candidate & { report?: ScreeningReport };
+type Row = Issue & { report?: MonitoringReport };
 
 const DUMMY_ROWS: Row[] = [
   {
     id: 1,
-    full_name: "Budi Santoso",
-    email: "budi@gmail.com",
+    full_name: "Gibran Rakabuming",
+    email: "@gibran_raka",
     created_at: "2026-05-10T10:00:00",
     report: {
       status: "completed",
       overall_risk: "low",
       risk_scores: {
-        professional_risk: 12,
+        misinformation: 12,
         toxic_language: 5,
         hate_speech: 2,
         explicit_content: 4,
@@ -33,14 +33,14 @@ const DUMMY_ROWS: Row[] = [
   },
   {
     id: 2,
-    full_name: "Karina Putri",
-    email: "karina@gmail.com",
+    full_name: "Polusi Jakarta",
+    email: "@pollutionwatch",
     created_at: "2026-05-12T10:00:00",
     report: {
       status: "completed",
       overall_risk: "high",
       risk_scores: {
-        professional_risk: 75,
+        misinformation: 75,
         toxic_language: 62,
         hate_speech: 40,
         explicit_content: 15,
@@ -51,14 +51,14 @@ const DUMMY_ROWS: Row[] = [
   },
   {
     id: 3,
-    full_name: "Raka Wijaya",
-    email: "raka@gmail.com",
+    full_name: "UU ITE Baru",
+    email: "@legalwatch_id",
     created_at: "2026-05-14T10:00:00",
     report: {
       status: "processing",
       overall_risk: "medium",
       risk_scores: {
-        professional_risk: 40,
+        misinformation: 40,
         toxic_language: 30,
         hate_speech: 15,
         explicit_content: 10,
@@ -70,7 +70,7 @@ const DUMMY_ROWS: Row[] = [
 ];
 
 const RISK_CATS = [
-  { label:"Fraud / Scam",    key:"professional_risk", color:"#ef4444", track:"rgba(239,68,68,0.12)" },
+  { label:"Misinformation",    key:"misinformation", color:"#ef4444", track:"rgba(239,68,68,0.12)" },
   { label:"Toxic Language",  key:"toxic_language",    color:"#f97316", track:"rgba(249,115,22,0.12)" },
   { label:"Hate Speech",     key:"hate_speech",       color:"#eab308", track:"rgba(234,179,8,0.12)"  },
   { label:"Explicit Content",key:"explicit_content",  color:"#a855f7", track:"rgba(168,85,247,0.12)" },
@@ -131,7 +131,7 @@ export default function DashboardPage() {
   useEffect(()=>{
     (async()=>{
       try {
-        const c = await api.listCandidates();
+        const c = await api.listIssues();
         const w = await Promise.all(c.map(async x=>{ try { return {...x,report:await api.getReport(x.id)} } catch { return x } }));
         setRows(w.length ? w : DUMMY_ROWS);
       } finally { setLoading(false); }
@@ -150,25 +150,25 @@ export default function DashboardPage() {
   const highPct = total>0 ? Math.round(((risk.high+risk.critical)/total)*100) : 0;
   const recent  = [...rows].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
 
-  const highRiskCandidates = rows.filter(
+  const highRiskIssues = rows.filter(
     r =>
       r.report?.overall_risk === "high" ||
       r.report?.overall_risk === "critical"
   );
 
-  const mediumRiskCandidates = rows.filter(
+  const mediumRiskIssues = rows.filter(
     r => r.report?.overall_risk === "medium"
   );
 
-  const goodCandidates = rows.filter(
+  const goodIssues = rows.filter(
     r => r.report?.overall_risk === "low"
   );
 
   const CARDS = [
-    { label:"Total Kandidat", val:total,                     sub:`${processing} diproses`,  icon:Users,      style:{ background:"var(--bg2)", border:"1px solid var(--border)" }, iStyle:{ background:"var(--bg3)", color:"var(--text3)" }, vColor:"var(--text)", href:"/candidates" },
-    { label:"Selesai",        val:completed,                 sub:"screening selesai",        icon:UserCheck,  style:{ background:"linear-gradient(135deg,#00c896 0%,#009e76 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?status=completed" },
-    { label:"High / Kritis",  val:risk.high+risk.critical,   sub:`${highPct}% dari total`,  icon:ShieldAlert, style:{ background:"linear-gradient(135deg,#ef4444 0%,#b91c1c 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?risk=high" },
-    { label:"Low Risk",       val:risk.low,                  sub:"aman dilanjutkan",         icon:TrendingUp,  style:{ background:"linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/candidates?risk=low" },
+    { label:"Total Issue", val:total,                     sub:`${processing} diproses`,  icon:Users,      style:{ background:"var(--bg2)", border:"1px solid var(--border)" }, iStyle:{ background:"var(--bg3)", color:"var(--text3)" }, vColor:"var(--text)", href:"/issues" },
+    { label:"Selesai",        val:completed,                 sub:"screening selesai",        icon:UserCheck,  style:{ background:"linear-gradient(135deg,#00c896 0%,#009e76 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/issues?status=completed" },
+    { label:"High / Kritis",  val:risk.high+risk.critical,   sub:`${highPct}% dari total`,  icon:ShieldAlert, style:{ background:"linear-gradient(135deg,#ef4444 0%,#b91c1c 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/issues?risk=high" },
+    { label:"Low Risk",       val:risk.low,                  sub:"aman dilanjutkan",         icon:TrendingUp,  style:{ background:"linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%)", border:"none", boxShadow:"0 4px 18px rgba(0,0,0,0.08)" }, iStyle:{ background:"rgba(255,255,255,0.2)", color:"#fff" }, vColor:"#fff", href:"/issues?risk=low" },
   ];
 
   const fmt = (d:string) => new Date(d).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"});
@@ -182,9 +182,9 @@ export default function DashboardPage() {
           <div>
             <p style={{ fontFamily:"'Syne',sans-serif", fontSize:10, fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase", color:"var(--accent)", marginBottom:8 }}>Overview</p>
             <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:34, color:"var(--text)", letterSpacing:"-0.03em", lineHeight:1.05 }}>Dashboard</h1>
-            <p style={{ fontSize:13.5, color:"var(--text3)", marginTop:8 }}>Pantau aktivitas HR screening kandidat secara real-time</p>
+            <p style={{ fontSize:13.5, color:"var(--text3)", marginTop:8 }}>Pantau aktivitas HR screening issue secara real-time</p>
           </div>
-          <Link href="/candidates/add" className="btn btn-primary fade-up d2">
+          <Link href="/issues/add" className="btn btn-primary fade-up d2">
             <Plus size={14} /> Screening Baru
           </Link>
         </div>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                     <Shield size={20} style={{ color:"var(--text4)" }} />
                   </div>
                   <p style={{ fontSize:12.5, color:"var(--text3)", fontWeight:500 }}>Belum ada data</p>
-                  <Link href="/candidates/add" style={{ fontSize:12, color:"var(--accent)", fontWeight:600 }}>Mulai screening →</Link>
+                  <Link href="/issues/add" style={{ fontSize:12, color:"var(--accent)", fontWeight:600 }}>Mulai screening →</Link>
                 </div>
               : <DonutChart data={risk} total={total} />
             }
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                 </div>
                 <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:"var(--text)" }}>Rata-rata Skor per Kategori</h2>
               </div>
-              {completed>0 && <span style={{ fontSize:11, color:"var(--text3)", fontWeight:500 }}>{completed} kandidat</span>}
+              {completed>0 && <span style={{ fontSize:11, color:"var(--text3)", fontWeight:500 }}>{completed} issue</span>}
             </div>
             {completed===0
               ? <div style={{ display:"flex", flexDirection:"column", alignItems:"center", padding:"36px 0", gap:8 }}>
@@ -307,11 +307,11 @@ export default function DashboardPage() {
             </div>
             <div style={{ flex:1 }}>
               <p style={{ fontSize:13.5, fontWeight:700, color:"var(--danger)", fontFamily:"'Syne',sans-serif" }}>
-                {risk.high+risk.critical} kandidat memerlukan perhatian segera
+                {risk.high+risk.critical} issue memerlukan perhatian segera
               </p>
               <p style={{ fontSize:12, color:"var(--text3)", marginTop:2 }}>Tinjau hasil screening sebelum melanjutkan proses rekrutmen.</p>
             </div>
-            <Link href="/candidates" style={{ display:"flex", alignItems:"center", gap:5, fontSize:12.5, fontWeight:700, color:"var(--danger)", textDecoration:"none", flexShrink:0, opacity:0.85 }}
+            <Link href="/issues" style={{ display:"flex", alignItems:"center", gap:5, fontSize:12.5, fontWeight:700, color:"var(--danger)", textDecoration:"none", flexShrink:0, opacity:0.85 }}
               onMouseEnter={e=>(e.currentTarget.style.opacity="1")}
               onMouseLeave={e=>(e.currentTarget.style.opacity="0.85")}>
               Tinjau <ArrowRight size={12} />
@@ -319,7 +319,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Candidate Insights */}
+        {/* Issues Insights */}
         <div
           style={{
             display: "grid",
@@ -335,19 +335,19 @@ export default function DashboardPage() {
                 <AlertTriangle size={16} style={{ color: "#ef4444" }} />
               </div>
               <div>
-                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Kandidat Risiko Tinggi</h3>
-                <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Kandidat yang perlu perhatian HR</p>
+                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Issue Risiko Tinggi</h3>
+                <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Issue yang perlu perhatian HR</p>
               </div>
             </div>
-            {highRiskCandidates.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--text3)" }}>Tidak ada kandidat bermasalah</p>
+            {highRiskIssues.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--text3)" }}>Tidak ada issue bermasalah</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {highRiskCandidates.map((row) => (
+                {highRiskIssues.map((row) => (
                   <div key={row.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 14, background: "var(--bg3)" }}>
                     <div>
-                      <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.full_name}</p>
-                      <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.email}</p>
+                      <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.keyword}</p>
+                      <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.keyword}</p>
                     </div>
                     <RiskBadge level={row.report?.overall_risk as any} />
                   </div>
@@ -368,18 +368,18 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {mediumRiskCandidates.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--text3)" }}>Tidak ada kandidat sedang</p>
+            {mediumRiskIssues.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--text3)" }}>Tidak ada issue sedang</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {mediumRiskCandidates.map((row) => (
-                  <Link key={row.id} href={`/candidates/${row.id}`} style={{ textDecoration: "none" }}>
+                {mediumRiskIssues.map((row) => (
+                  <Link key={row.id} href={`/issues/${row.id}`} style={{ textDecoration: "none" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 14, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)", cursor: "pointer", transition: "background 0.15s" }}
                       onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.12)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "rgba(245,158,11,0.06)")}>
                       <div>
-                        <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.full_name}</p>
-                        <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.email}</p>
+                        <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.keyword}</p>
+                        <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.keyword}</p>
                       </div>
                       <RiskBadge level="medium" />
                     </div>
@@ -387,33 +387,33 @@ export default function DashboardPage() {
                 ))}
                 <div style={{ marginTop: 8, padding: "10px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px dashed rgba(245,158,11,0.3)" }}>
                   <p style={{ fontSize: 11.5, color: "#d97706", fontWeight: 600, lineHeight: 1.5 }}>
-                    ⚠ Kandidat ini memerlukan diskusi lebih lanjut dengan pihak terkait sebelum melanjutkan proses interview.
+                    ⚠ Issue ini memerlukan diskusi lebih lanjut dengan pihak terkait sebelum melanjutkan proses interview.
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Good Candidates */}
+          {/* Good Issues */}
           <div className="card fade-up d4" style={{ padding: "24px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <CheckCircle size={16} style={{ color: "#10b981" }} />
               </div>
               <div>
-                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Kandidat Direkomendasikan</h3>
-                <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Kandidat dengan risiko rendah</p>
+                <h3 style={{ fontFamily: "'Syne',sans-serif", fontSize: 15, fontWeight: 700, color: "var(--text)" }}>Issue Direkomendasikan</h3>
+                <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>Issue dengan risiko rendah</p>
               </div>
             </div>
-            {goodCandidates.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--text3)" }}>Belum ada kandidat low risk</p>
+            {goodIssues.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--text3)" }}>Belum ada issue low risk</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {goodCandidates.map((row) => (
+                {goodIssues.map((row) => (
                   <div key={row.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 14, background: "var(--bg3)" }}>
                     <div>
-                      <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.full_name}</p>
-                      <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.email}</p>
+                      <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>{row.keyword}</p>
+                      <p style={{ fontSize: 11.5, color: "var(--text3)", marginTop: 2 }}>{row.keyword}</p>
                     </div>
                     <RiskBadge level="low" />
                   </div>
@@ -431,7 +431,7 @@ export default function DashboardPage() {
               <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:"var(--text)" }}>Screening Terbaru</h2>
               {total>0 && <span style={{ fontSize:11, fontWeight:600, padding:"2px 8px", borderRadius:999, background:"var(--bg3)", color:"var(--text3)" }}>{Math.min(5,total)} dari {total}</span>}
             </div>
-            <Link href="/candidates" style={{ display:"flex", alignItems:"center", gap:5, fontSize:12.5, fontWeight:600, color:"var(--accent)", textDecoration:"none" }}>
+            <Link href="/issues" style={{ display:"flex", alignItems:"center", gap:5, fontSize:12.5, fontWeight:600, color:"var(--accent)", textDecoration:"none" }}>
               Lihat semua <ArrowRight size={11} />
             </Link>
           </div>
@@ -441,14 +441,14 @@ export default function DashboardPage() {
                 <div style={{ width:52, height:52, borderRadius:16, background:"var(--bg3)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px" }}>
                   <Users size={22} style={{ color:"var(--text4)" }} />
                 </div>
-                <p style={{ fontWeight:600, color:"var(--text)", fontSize:14 }}>Belum ada kandidat</p>
-                <p style={{ fontSize:12.5, color:"var(--text3)", marginTop:4, marginBottom:20 }}>Mulai tambah kandidat untuk screening</p>
-                <Link href="/candidates/add" className="btn btn-primary" style={{ display:"inline-flex" }}><Plus size={12} /> Tambah Kandidat</Link>
+                <p style={{ fontWeight:600, color:"var(--text)", fontSize:14 }}>Belum ada issue</p>
+                <p style={{ fontSize:12.5, color:"var(--text3)", marginTop:4, marginBottom:20 }}>Mulai tambah issue untuk screening</p>
+                <Link href="/issues/add" className="btn btn-primary" style={{ display:"inline-flex" }}><Plus size={12} /> Tambah Issue</Link>
               </div>
             : <table style={{ width:"100%", borderCollapse:"collapse" }}>
                 <thead>
                   <tr style={{ background:"var(--bg3)", borderBottom:"1px solid var(--border)" }}>
-                    {["Kandidat","Status","Risiko","Tanggal",""].map(h=>(
+                    {["Issue","Status","Risiko","Tanggal",""].map(h=>(
                       <th key={h} style={{ textAlign:"left", padding:"12px 22px", fontSize:10.5, fontWeight:700, letterSpacing:"0.09em", textTransform:"uppercase", color:"var(--text3)" }}>{h}</th>
                     ))}
                   </tr>
@@ -461,11 +461,11 @@ export default function DashboardPage() {
                       <td style={{ padding:"15px 22px" }}>
                         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                           <div style={{ width:36, height:36, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:"linear-gradient(135deg,var(--accent),#009e76)", fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:13, color:"#061814" }}>
-                            {row.full_name.charAt(0).toUpperCase()}
+                            {row.keyword.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p style={{ fontSize:13.5, fontWeight:600, color:"var(--text)" }}>{row.full_name}</p>
-                            <p style={{ fontSize:11.5, color:"var(--text3)" }}>{row.email}</p>
+                            <p style={{ fontSize:13.5, fontWeight:600, color:"var(--text)" }}>{row.keyword}</p>
+                            <p style={{ fontSize:11.5, color:"var(--text3)" }}>{row.keyword}</p>
                           </div>
                         </div>
                       </td>
@@ -486,7 +486,7 @@ export default function DashboardPage() {
                       </td>
                       <td style={{ padding:"15px 22px", fontSize:12, color:"var(--text3)" }}>{fmt(row.created_at)}</td>
                       <td style={{ padding:"15px 22px" }}>
-                        <Link href={`/candidates/${row.id}`} style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12.5, fontWeight:600, color:"var(--accent)", textDecoration:"none" }}>
+                        <Link href={`/issues/${row.id}`} style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12.5, fontWeight:600, color:"var(--accent)", textDecoration:"none" }}>
                           Detail <ArrowRight size={11} />
                         </Link>
                       </td>

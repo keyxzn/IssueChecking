@@ -1,39 +1,30 @@
-from pydantic import BaseModel, EmailStr, HttpUrl, field_validator
+from pydantic import BaseModel, field_validator
 from typing import Any
 from datetime import datetime
-from app.models.models import RiskLevel, ScreeningStatus
+from app.models.models import RiskLevel, MonitoringStatus
 
 
-# ─── Candidate ───────────────────────────────────────────
+# ─── Issue ───────────────────────────────────────────
 
-class CandidateCreate(BaseModel):
-    full_name: str
-    email: EmailStr
-    phone: str | None = None
-    linkedin_url: str | None = None
+class IssueCreate(BaseModel):
+    keyword: str
     instagram_url: str | None = None
     twitter_url: str | None = None
     facebook_url: str | None = None
-    consent_given: bool
+    tiktok_url: str | None = None
+    youtube_url: str | None = None
+    consent_given: bool = True
 
-    @field_validator("consent_given")
+    @field_validator("keyword")
     @classmethod
-    def must_consent(cls, v: bool) -> bool:
-        if not v:
-            raise ValueError("Candidate consent is required before screening")
-        return v
-
-    @field_validator("full_name")
-    @classmethod
-    def name_not_empty(cls, v: str) -> str:
+    def keyword_not_empty(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("Full name cannot be empty")
+            raise ValueError("Keyword tidak boleh kosong")
         return v.strip()
 
-    @field_validator("instagram_url", "twitter_url", "facebook_url", "linkedin_url", mode="before")
+    @field_validator("instagram_url", "twitter_url", "facebook_url", "tiktok_url", "youtube_url", mode="before")
     @classmethod
     def empty_str_to_none(cls, v):
-        """Convert empty string or placeholder to None."""
         if v is None:
             return None
         s = str(v).strip().lower()
@@ -41,26 +32,15 @@ class CandidateCreate(BaseModel):
             return None
         return str(v).strip()
 
-    @field_validator("phone", mode="before")
-    @classmethod
-    def clean_phone(cls, v):
-        if v is None:
-            return None
-        s = str(v).strip()
-        if s in ("", "tidak ada", "none", "-"):
-            return None
-        return s
 
-
-class CandidateResponse(BaseModel):
+class IssueResponse(BaseModel):
     id: str
-    full_name: str
-    email: str
-    phone: str | None
-    linkedin_url: str | None
+    keyword: str
     instagram_url: str | None
     twitter_url: str | None
     facebook_url: str | None
+    tiktok_url: str | None
+    youtube_url: str | None
     consent_given: bool
     created_at: datetime
 
@@ -70,12 +50,12 @@ class CandidateResponse(BaseModel):
 # ─── Report ──────────────────────────────────────────────
 
 class RiskScores(BaseModel):
-    explicit_content: float = 0.0      # 0-100
+    explicit_content: float = 0.0
     toxic_language: float = 0.0
     hate_speech: float = 0.0
     violence: float = 0.0
     extremism: float = 0.0
-    professional_risk: float = 0.0
+    misinformation: float = 0.0
 
 
 class FlaggedItem(BaseModel):
@@ -86,10 +66,14 @@ class FlaggedItem(BaseModel):
     url: str | None = None
 
 
-class ScreeningReportResponse(BaseModel):
+class AssessmentUpdate(BaseModel):
+    assessment_status: str  # relevant | irrelevant
+
+
+class MonitoringReportResponse(BaseModel):
     id: str
-    candidate_id: str
-    status: ScreeningStatus
+    issue_id: str
+    status: MonitoringStatus
     overall_risk: RiskLevel | None
     risk_scores: dict[str, float] | None
     found_profiles: dict[str, Any] | None
@@ -97,6 +81,10 @@ class ScreeningReportResponse(BaseModel):
     ai_summary: str | None
     created_at: datetime
     completed_at: datetime | None
+    assessment_status: str | None = None
+    assessed_by: str | None = None
+    assessed_by_name: str | None = None
+    assessed_at: datetime | None = None
 
     model_config = {"from_attributes": True}
 
@@ -106,3 +94,28 @@ class ScreeningReportResponse(BaseModel):
 class MessageResponse(BaseModel):
     message: str
     data: Any | None = None
+
+
+# ─── User Management ─────────────────────────────────────
+
+class UserCreate(BaseModel):
+    email: str
+    full_name: str
+    password: str
+    role: str = "analyst"
+
+class UserUpdate(BaseModel):
+    full_name: str | None = None
+    email: str | None = None
+    password: str | None = None
+    role: str | None = None
+    is_active: bool | None = None
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}

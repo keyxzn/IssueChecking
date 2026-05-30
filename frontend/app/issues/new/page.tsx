@@ -24,19 +24,20 @@ import {
 import Link from "next/link";
 import { api } from "@/lib/api";
 
-export default function NewCandidatePage() {
+export default function NewIssuePage() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
+    keyword: "",
+    
+    
     instagram_url: "",
     twitter_url: "",
     facebook_url: "",
-    linkedin_url: "",
+    tiktok_url: ""
+    youtube_url: "",
   });
 
   async function submit(e: React.FormEvent) {
@@ -45,9 +46,9 @@ export default function NewCandidatePage() {
     setLoading(true);
 
     try {
-      const candidate = await api.createCandidate(form);
+      const issue = await api.createIssue(form);
 
-      router.push(`/candidates/${candidate.id}`);
+      router.push(`/issues/${issue.id}`);
     } finally {
       setLoading(false);
     }
@@ -68,11 +69,11 @@ export default function NewCandidatePage() {
 
             <div>
               <Link
-                href="/candidates"
+                href="/issues"
                 className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-800 transition mb-4"
               >
                 <ArrowLeft size={16} />
-                Kembali ke Kandidat
+                Kembali ke Issue
               </Link>
 
               <div className="inline-flex items-center gap-2 bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-xs font-bold tracking-wide mb-4">
@@ -81,12 +82,12 @@ export default function NewCandidatePage() {
               </div>
 
               <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-tight">
-                Tambah Kandidat
+                Tambah Issue
               </h1>
 
               <p className="text-slate-500 mt-3 text-lg max-w-2xl leading-relaxed">
                 Mulai screening otomatis untuk analisa social media,
-                toxic behavior, fraud risk, dan reputasi digital kandidat.
+                toxic behavior, fraud risk, dan reputasi digital issue.
               </p>
             </div>
 
@@ -169,11 +170,11 @@ export default function NewCandidatePage() {
 
                 <div>
                   <h2 className="text-2xl font-black text-slate-900">
-                    Data Kandidat
+                    Data Issue
                   </h2>
 
                   <p className="text-slate-500 mt-1">
-                    Isi informasi kandidat untuk mulai screening
+                    Isi informasi issue untuk mulai screening
                   </p>
                 </div>
               </div>
@@ -196,14 +197,14 @@ export default function NewCandidatePage() {
 
                       <input
                         required
-                        value={form.full_name}
+                        value={form.keyword}
                         onChange={(e) =>
                           setForm({
                             ...form,
-                            full_name: e.target.value,
+                            keyword: e.target.value,
                           })
                         }
-                        placeholder="Nama lengkap kandidat"
+                        placeholder="Nama lengkap issue"
                         className="w-full h-14 rounded-2xl border border-slate-200 bg-white px-12 text-sm font-medium outline-none focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100 transition"
                       />
                     </div>
@@ -315,9 +316,9 @@ export default function NewCandidatePage() {
                       {
                         label: "LinkedIn",
                         icon: Linkedin,
-                        key: "linkedin_url",
+                        key: "tiktok_url",
                         placeholder:
-                          "https://linkedin.com/in/username",
+                          "https://tiktok.com/@username",
                         color: "from-blue-700 to-sky-500",
                       },
                     ].map((item) => {
@@ -371,7 +372,7 @@ export default function NewCandidatePage() {
                     </h3>
 
                     <p className="text-sm text-amber-700 leading-relaxed">
-                      Pastikan kandidat telah memberikan
+                      Pastikan issue telah memberikan
                       persetujuan tertulis untuk proses
                       background screening sesuai dengan
                       regulasi UU PDP Indonesia.
@@ -398,13 +399,13 @@ export default function NewCandidatePage() {
                     ) : (
                       <>
                         <Sparkles size={18} />
-                        Mulai Screening Kandidat
+                        Mulai Screening Issue
                       </>
                     )}
                   </button>
 
                   <Link
-                    href="/candidates/bulk"
+                    href="/issues/bulk"
                     className="h-14 px-8 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition text-slate-700 font-bold text-sm flex items-center gap-3"
                   >
                     <Upload size={18} />

@@ -4,7 +4,7 @@ from pydantic import BaseModel, EmailStr
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.services.auth_service import authenticate_user, create_access_token, create_user, get_user_by_email
-from app.models.models import HRUser
+from app.models.models import AppUser
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -59,7 +59,7 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/register", response_model=UserOut)
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
-    """Register HR user baru. Di production, endpoint ini harus diproteksi admin."""
+    """Register user baru. Di production, endpoint ini harus diproteksi admin."""
     existing = await get_user_by_email(db, data.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email sudah terdaftar")
@@ -68,5 +68,5 @@ async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserOut)
-async def get_me(current_user: HRUser = Depends(get_current_user)):
+async def get_me(current_user: AppUser = Depends(get_current_user)):
     return current_user

@@ -3,7 +3,7 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    app_name: str = "HR Screening API"
+    app_name: str = "Strapping Media API"
     app_env: str = "development"
 
     secret_key: str = "changeme-secret-key-for-dev"
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = (
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/hr_checker"
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/strapping_media"
     )
 
     # Ollama

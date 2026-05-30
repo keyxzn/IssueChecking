@@ -1,10 +1,12 @@
 "use client";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { addBulkSession } from "../page";
 import AppLayout from "@/components/AppLayout";
 import { api } from "@/lib/api";
 import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, X, Zap, Shield, Globe, Camera, MessageCircle, Link2, Newspaper, Search, ArrowRight } from "lucide-react";
 
-interface BulkRow { full_name:string; email:string; phone:string; instagram_url:string; twitter_url:string; facebook_url:string; linkedin_url:string; }
+interface BulkRow { keyword:string; email:string; phone:string; instagram_url:string; twitter_url:string; facebook_url:string; tiktok_url:string; }
 
 const PLATFORMS = [
   { icon:Camera,        label:"Instagram",  color:"#e1306c", bg:"rgba(225,48,108,0.10)" },
@@ -17,12 +19,13 @@ const PLATFORMS = [
 
 const TMPL_HEADS = ["Full Name","Email","Phone","Instagram","Twitter/X","Facebook","LinkedIn"];
 const TMPL_ROWS  = [
-  ["John Doe",   "john@email.com",  "+62 812 0000", "instagram.com/john", "x.com/john",  "facebook.com/john",  "linkedin.com/in/john"],
-  ["Jane Smith", "jane@email.com",  "+62 813 0001", "instagram.com/jane", "tidak ada",   "facebook.com/jane",  "linkedin.com/in/jane"],
-  ["Budi S.",    "budi@email.com",  "+62 857 0002", "instagram.com/budi", "x.com/budi",  "facebook.com/budi",  "linkedin.com/in/budi"],
+  ["Gibran Rakabuming", "instagram.com/gibranraka", "x.com/gibranraka", "facebook.com/gibranraka", "tiktok.com/@gibranraka", "youtube.com/@gibran"],
+  ["Polusi Jakarta", "instagram.com/pollutionwatch", "tidak ada", "facebook.com/jakarta.pollute", "tidak ada", "tidak ada"],
+  ["Korupsi Pejabat", "instagram.com/watchid", "x.com/watchid", "facebook.com/watchid", "tiktok.com/@watchid", "youtube.com/@watchid"],
 ];
 
 export default function BulkPage() {
+  const router = useRouter();
   const [file, setFile]       = useState<File|null>(null);
   const [preview, setPreview] = useState<BulkRow[]>([]);
   const [error, setError]     = useState("");
@@ -56,20 +59,20 @@ export default function BulkPage() {
       return "";
     };
     return {
-      full_name:     g("full_name","nama","name","fullname","nama_lengkap"),
+      keyword:     g("keyword","nama","name","fullname","nama_lengkap"),
       email:         g("email","e_mail","emailaddress"),
       phone:         g("phone","hp","no_hp","telepon","telp","nohp","phonenumber","no_telepon"),
       instagram_url: g("instagram_url","instagram","ig","instagram_url"),
       twitter_url:   g("twitter_url","twitter","x","twitter_x"),
       facebook_url:  g("facebook_url","facebook","fb"),
-      linkedin_url:  g("linkedin_url","linkedin","li"),
+      tiktok_url:  g("tiktok_url","tiktok","tt"),
     };
   }
 
   function downloadTemplate() {
-    const csv = ["full_name,email,phone,instagram_url,twitter_url,facebook_url,linkedin_url",
-      "John Doe,john@email.com,+62 812 0000 0000,https://instagram.com/johndoe,https://x.com/johndoe,https://facebook.com/johndoe,https://linkedin.com/in/johndoe",
-      "Jane Smith,jane@email.com,+62 813 0001 0001,https://instagram.com/janesmith,tidak ada,https://facebook.com/janesmith,https://linkedin.com/in/janesmith",
+    const csv = ["keyword,instagram_url,twitter_url,facebook_url,tiktok_url",
+      "Gibran Rakabuming,https://instagram.com/gibranraka,https://x.com/gibranraka,https://facebook.com/gibranraka,https://tiktok.com/@gibranraka,https://youtube.com/@gibran",
+      "Polusi Jakarta,https://instagram.com/pollutionwatch,tidak ada,https://facebook.com/jakarta.pollute,tidak ada,tidak ada",
     ].join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
@@ -85,14 +88,26 @@ export default function BulkPage() {
       const wb   = XLSX.read(buf);
       const ws   = wb.Sheets[wb.SheetNames[0]];
       const raw  = XLSX.utils.sheet_to_json<Record<string,string>>(ws);
-      const rows = raw.map(normalizeRow).filter(r => r.full_name && r.email);
+      const rows = raw.map(normalizeRow).filter(r => r.keyword && r.email);
       if (rows.length === 0) { setError("Tidak ada data valid. Pastikan kolom Nama dan Email terisi."); setLoading(false); return; }
 
+      let successCount = 0;
+      let failCount = 0;
       for (const row of rows) {
         try {
-          await api.createCandidate({ ...row, consent_given: true });
-        } catch { /* lanjut ke kandidat berikutnya */ }
+          await api.createIssue({ ...row, consent_given: true });
+          successCount++;
+        } catch { failCount++; }
       }
+      // Save to history
+      addBulkSession({
+        fileName: file?.name ?? "upload.xlsx",
+        totalIssues: rows.length,
+        completed: successCount,
+        failed: failCount,
+        status: failCount === rows.length ? "failed" : successCount < rows.length ? "partial" : "completed",
+        riskSummary: { low: 0, medium: 0, high: 0, critical: 0 },
+      });
       setDone(true);
     } catch { setError("Terjadi kesalahan saat upload."); }
     finally { setLoading(false); }
@@ -106,9 +121,9 @@ export default function BulkPage() {
             <CheckCircle size={30} style={{ color:"var(--accent)" }} />
           </div>
           <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:26, color:"var(--text)", marginBottom:10 }}>Screening Dimulai!</h2>
-          <p style={{ fontSize:13.5, color:"var(--text3)", lineHeight:1.65, marginBottom:28 }}>Semua kandidat sedang diproses oleh AI. Pantau progress di halaman Kandidat.</p>
-          <a href="/candidates" className="btn btn-primary" style={{ display:"flex", justifyContent:"center" }}>
-            Lihat Kandidat <ArrowRight size={14} />
+          <p style={{ fontSize:13.5, color:"var(--text3)", lineHeight:1.65, marginBottom:28 }}>Semua issue sedang diproses oleh AI. Pantau progress di halaman Issue.</p>
+          <a href="/issues" className="btn btn-primary" style={{ display:"flex", justifyContent:"center" }}>
+            Lihat Issue <ArrowRight size={14} />
           </a>
         </div>
       </div>
@@ -127,8 +142,8 @@ export default function BulkPage() {
               <Zap size={9} style={{ color:"var(--accent)" }} />
               <span style={{ fontSize:10, fontWeight:700, letterSpacing:"0.15em", textTransform:"uppercase", color:"var(--accent)" }}>Bulk Screening System</span>
             </div>
-            <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:36, color:"#fff", letterSpacing:"-0.03em", marginBottom:10, lineHeight:1.1 }}>Upload Kandidat Massal</h1>
-            <p style={{ color:"#475569", fontSize:14, maxWidth:500, lineHeight:1.65, marginBottom:28 }}>Upload file CSV atau Excel untuk screening banyak kandidat sekaligus menggunakan AI background checking.</p>
+            <h1 style={{ fontFamily:"'Syne',sans-serif", fontWeight:800, fontSize:36, color:"#fff", letterSpacing:"-0.03em", marginBottom:10, lineHeight:1.1 }}>Upload Issue Massal</h1>
+            <p style={{ color:"#475569", fontSize:14, maxWidth:500, lineHeight:1.65, marginBottom:28 }}>Upload file CSV atau Excel untuk screening banyak issue sekaligus menggunakan AI background checking.</p>
             <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:32 }}>
               <button onClick={downloadTemplate} className="btn btn-primary"><Download size={13} /> Download Template</button>
               <button onClick={()=>inputRef.current?.click()} style={{
@@ -166,7 +181,7 @@ export default function BulkPage() {
                   </div>
                   <div>
                     <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:"var(--text)" }}>Download Template</h2>
-                    <p style={{ fontSize:11.5, color:"var(--text3)", marginTop:2 }}>Gunakan template berikut untuk upload kandidat</p>
+                    <p style={{ fontSize:11.5, color:"var(--text3)", marginTop:2 }}>Gunakan template berikut untuk upload issue</p>
                   </div>
                 </div>
                 <button onClick={downloadTemplate} className="btn btn-primary" style={{ padding:"9px 18px" }}>
@@ -174,7 +189,7 @@ export default function BulkPage() {
                 </button>
               </div>
               <p style={{ padding:"10px 24px", fontSize:12, color:"var(--text3)", borderBottom:"1px solid var(--border)", background:"var(--bg3)" }}>
-                Tulis <code style={{ padding:"1px 6px", borderRadius:5, background:"var(--bg4)", border:"1px solid var(--border)", fontFamily:"'JetBrains Mono',monospace", fontSize:11 }}>tidak ada</code> untuk platform yang tidak dimiliki kandidat.
+                Tulis <code style={{ padding:"1px 6px", borderRadius:5, background:"var(--bg4)", border:"1px solid var(--border)", fontFamily:"'JetBrains Mono',monospace", fontSize:11 }}>tidak ada</code> untuk platform yang tidak dimiliki issue.
               </p>
               <div style={{ overflowX:"auto" }}>
                 <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
@@ -215,7 +230,7 @@ export default function BulkPage() {
                   <Upload size={15} style={{ color:"var(--blue)" }} />
                 </div>
                 <div>
-                  <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:"var(--text)" }}>Upload File Kandidat</h2>
+                  <h2 style={{ fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:15, color:"var(--text)" }}>Upload File Issue</h2>
                   <p style={{ fontSize:11.5, color:"var(--text3)", marginTop:2 }}>Upload file Excel atau CSV yang sudah diisi.</p>
                 </div>
               </div>
@@ -266,7 +281,7 @@ export default function BulkPage() {
                         <tbody>
                           {preview.map((r,i)=>(
                             <tr key={i} style={{ borderBottom:i<preview.length-1?"1px solid var(--border)":"none" }}>
-                              <td style={{ padding:"10px 14px", fontWeight:600, color:"var(--text)" }}>{r.full_name}</td>
+                              <td style={{ padding:"10px 14px", fontWeight:600, color:"var(--text)" }}>{r.keyword}</td>
                               <td style={{ padding:"10px 14px", color:"var(--blue)" }}>{r.email}</td>
                               <td style={{ padding:"10px 14px", color:"var(--text2)" }}>{r.phone}</td>
                             </tr>
@@ -286,7 +301,7 @@ export default function BulkPage() {
                         {consent&&<span style={{ color:"#061814", fontSize:11, fontWeight:900 }}>✓</span>}
                       </div>
                       <p style={{ fontSize:12.5, color:"var(--text2)", lineHeight:1.5 }}>
-                        <strong style={{ color:"var(--text)" }}>Consent</strong> — Semua kandidat telah memberikan persetujuan sesuai <strong style={{ color:"var(--accent)" }}>UU PDP Indonesia</strong>.
+                        <strong style={{ color:"var(--text)" }}>Consent</strong> — Semua issue telah memberikan persetujuan sesuai <strong style={{ color:"var(--accent)" }}>UU PDP Indonesia</strong>.
                       </p>
                     </div>
                   </div>

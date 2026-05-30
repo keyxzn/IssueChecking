@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api.routes import candidates, reports, auth
+from app.api.routes import issues, reports, auth, users
 import structlog
 
 logger = structlog.get_logger()
@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="HR Screening API",
+    title="Strapping Media API",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -39,10 +39,11 @@ app.add_middleware(
 )
 
 app.include_router(auth.router,       prefix="/api/v1")
-app.include_router(candidates.router, prefix="/api/v1")
+app.include_router(issues.router, prefix="/api/v1")
 app.include_router(reports.router,    prefix="/api/v1")
+app.include_router(users.router,      prefix="/api/v1")
 
 
 @app.get("/")
 async def root():
-    return {"name": "HR Screening API", "version": "1.0.0"}
+    return {"name": "Strapping Media API", "version": "1.0.0"}

@@ -40,7 +40,7 @@ export default function LoginPage() {
             <p style={{ fontFamily: "'Syne',sans-serif", fontWeight: 800, fontSize: 20, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>
               HR<span style={{ color: "#10b981" }}>Check</span>
             </p>
-            <p style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "#1a3a28", fontWeight: 600, marginTop: 3 }}>AI Recruitment</p>
+            <p style={{ fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "#1a3a28", fontWeight: 600, marginTop: 3 }}>Media Intelligence</p>
           </div>
         </div>
 
@@ -53,14 +53,14 @@ export default function LoginPage() {
             Background<br />Screening yang<br /><span style={{ color: "#10b981" }}>Lebih Cerdas</span>
           </h2>
           <p style={{ fontSize: 14, lineHeight: 1.7, color: "#334155", marginBottom: 28, maxWidth: 360 }}>
-            Analisis data publik kandidat dari 6+ platform sosial media secara legal, profesional, dan otomatis berbasis AI.
+            Pantau isu dan keyword di 6+ platform media secara real-time, akurat, dan otomatis berbasis AI.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {[
               { icon: "🛡️", text: "Legal & Sesuai UU PDP Indonesia" },
               { icon: "🤖", text: "AI analisis Ollama + Llama 3" },
               { icon: "📊", text: "Risk report otomatis per kategori" },
-              { icon: "⚡", text: "Bulk screening ratusan kandidat" },
+              { icon: "⚡", text: "Bulk monitoring ratusan keyword" },
             ].map(f => (
               <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span style={{ fontSize: 16, width: 24, flexShrink: 0 }}>{f.icon}</span>
@@ -70,7 +70,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p style={{ position: "relative", fontSize: 11, color: "#0f1f18" }}>© 2026 HRCheck · Confidential</p>
+        <p style={{ position: "relative", fontSize: 11, color: "#0f1f18" }}>© 2026 Strapping Media · Confidential</p>
       </div>
 
       {/* ── RIGHT PANEL ── */}
@@ -147,7 +147,7 @@ export default function LoginPage() {
                 Masuk...
               </>
             ) : (
-              <><Shield size={14} /> Masuk ke HRCheck</>
+              <><Shield size={14} /> Masuk ke Strapping Media</>
             )}
           </button>
 

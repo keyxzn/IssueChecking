@@ -12,7 +12,7 @@ export default function Navbar() {
 
   const links = [
     { href: "/dashboard",  label: "Dashboard",       icon: LayoutDashboard },
-    { href: "/candidates", label: "Kandidat",         icon: Users },
+    { href: "/issues", label: "Issues",         icon: Users },
   ];
 
   return (
@@ -37,7 +37,7 @@ export default function Navbar() {
           </Link>
         ))}
 
-        <Link href="/candidates/new"
+        <Link href="/issues/new"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-all ml-1">
           <Plus size={13} /> Baru
         </Link>

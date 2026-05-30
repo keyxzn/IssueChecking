@@ -14,38 +14,37 @@ class RiskLevel(str, enum.Enum):
     critical = "critical"
 
 
-class ScreeningStatus(str, enum.Enum):
+class MonitoringStatus(str, enum.Enum):
     pending = "pending"
     processing = "processing"
     completed = "completed"
     failed = "failed"
 
 
-class Candidate(Base):
-    __tablename__ = "candidates"
+class Issue(Base):
+    __tablename__ = "issues"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False)
-    phone: Mapped[str | None] = mapped_column(String(20))
-    linkedin_url: Mapped[str | None] = mapped_column(Text)
+    keyword: Mapped[str] = mapped_column(String(255), nullable=False)
     instagram_url: Mapped[str | None] = mapped_column(Text)
     twitter_url: Mapped[str | None] = mapped_column(Text)
     facebook_url: Mapped[str | None] = mapped_column(Text)
-    consent_given: Mapped[bool] = mapped_column(Boolean, default=False)
+    tiktok_url: Mapped[str | None] = mapped_column(Text)
+    youtube_url: Mapped[str | None] = mapped_column(Text)
+    consent_given: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # Relationship
-    reports: Mapped[list["ScreeningReport"]] = relationship("ScreeningReport", back_populates="candidate")
+    reports: Mapped[list["MonitoringReport"]] = relationship("MonitoringReport", back_populates="issue")
 
 
-class ScreeningReport(Base):
-    __tablename__ = "screening_reports"
+class MonitoringReport(Base):
+    __tablename__ = "monitoring_reports"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    candidate_id: Mapped[str] = mapped_column(String(36), ForeignKey("candidates.id"), nullable=False)
-    status: Mapped[ScreeningStatus] = mapped_column(SAEnum(ScreeningStatus), default=ScreeningStatus.pending)
+    issue_id: Mapped[str] = mapped_column(String(36), ForeignKey("issues.id"), nullable=False)
+    status: Mapped[MonitoringStatus] = mapped_column(SAEnum(MonitoringStatus), default=MonitoringStatus.pending)
     overall_risk: Mapped[RiskLevel | None] = mapped_column(SAEnum(RiskLevel))
     risk_scores: Mapped[dict | None] = mapped_column(JSON)           # per-category scores 0-100
     found_profiles: Mapped[dict | None] = mapped_column(JSON)        # discovered social accounts
@@ -55,18 +54,28 @@ class ScreeningReport(Base):
     error_message: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
     completed_at: Mapped[DateTime | None] = mapped_column(DateTime)
+    # Assessment fields
+    assessment_status: Mapped[str | None] = mapped_column(String(50))   # relevant | irrelevant
+    assessed_by: Mapped[str | None] = mapped_column(String(255))
+    assessed_by_name: Mapped[str | None] = mapped_column(String(255))
+    assessed_at: Mapped[DateTime | None] = mapped_column(DateTime)
 
     # Relationship
-    candidate: Mapped["Candidate"] = relationship("Candidate", back_populates="reports")
+    issue: Mapped["Issue"] = relationship("Issue", back_populates="reports")
 
 
-class HRUser(Base):
-    __tablename__ = "hr_users"
+class AppUser(Base):
+    __tablename__ = "app_users"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    role: Mapped[str] = mapped_column(String(50), default="hr")  # hr | admin
+    role: Mapped[str] = mapped_column(String(50), default="analyst")  # analyst | admin
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+
+
+class AssessmentStatus(str, enum.Enum):
+    relevant = "relevant"
+    irrelevant = "irrelevant"

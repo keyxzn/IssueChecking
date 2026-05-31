@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import AppLayout from "@/components/AppLayout";
-import { userApi, AppUser, UserCreate } from "@/lib/api";
+import { userApi, HRUser, UserCreate } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Plus, Trash2, Edit2, X, Check, User, Shield, Eye, EyeOff, Loader2 } from "lucide-react";
 
 export default function UsersPage() {
   const { user: me } = useAuth();
-  const [users, setUsers] = useState<AppUser[]>([]);
+  const [users, setUsers] = useState<HRUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
@@ -16,7 +16,7 @@ export default function UsersPage() {
   const [showPw, setShowPw] = useState(false);
 
   const [form, setForm] = useState<UserCreate & { id?: string }>({
-    email: "", full_name: "", password: "", role: "analyst",
+    email: "", full_name: "", password: "", role: "hr",
   });
 
   const load = async () => {
@@ -59,7 +59,7 @@ export default function UsersPage() {
     } catch (e: any) { setError(e.message ?? "Gagal hapus user"); }
   };
 
-  const startEdit = (u: AppUser) => {
+  const startEdit = (u: HRUser) => {
     setEditId(u.id);
     setForm({ id: u.id, email: u.email, full_name: u.full_name, password: "", role: u.role });
     setShowAdd(true);
@@ -68,7 +68,7 @@ export default function UsersPage() {
   const resetForm = () => {
     setShowAdd(false);
     setEditId(null);
-    setForm({ email: "", full_name: "", password: "", role: "analyst" });
+    setForm({ email: "", full_name: "", password: "", role: "hr" });
   };
 
   const roleColor = (role: string) => role === "admin" ? "#f59e0b" : "var(--accent)";
@@ -159,7 +159,7 @@ export default function UsersPage() {
                     onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
                     style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text)", fontSize: 13 }}
                   >
-                    <option value="analyst">HR</option>
+                    <option value="hr">HR</option>
                     <option value="admin">Admin</option>
                   </select>
                 </div>

@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models.models import AppUser
+from app.models.models import HRUser
 from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -36,20 +36,20 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 
-async def get_user_by_email(db: AsyncSession, email: str) -> Optional[AppUser]:
-    result = await db.execute(select(AppUser).where(AppUser.email == email))
+async def get_user_by_email(db: AsyncSession, email: str) -> Optional[HRUser]:
+    result = await db.execute(select(HRUser).where(HRUser.email == email))
     return result.scalars().first()
 
 
-async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[AppUser]:
+async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[HRUser]:
     user = await get_user_by_email(db, email)
     if not user or not verify_password(password, user.hashed_password):
         return None
     return user
 
 
-async def create_user(db: AsyncSession, email: str, full_name: str, password: str, role: str = "hr") -> AppUser:
-    user = AppUser(
+async def create_user(db: AsyncSession, email: str, full_name: str, password: str, role: str = "hr") -> HRUser:
+    user = HRUser(
         email=email,
         full_name=full_name,
         hashed_password=hash_password(password),

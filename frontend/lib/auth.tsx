@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const stored = localStorage.getItem("sm_user");
+    const stored = localStorage.getItem("hr_user");
     if (stored) {
       try { setUser(JSON.parse(stored)); } catch {}
     }
@@ -61,13 +61,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: data.role,
       token: data.access_token,
     };
-    localStorage.setItem("sm_user", JSON.stringify(authUser));
+    localStorage.setItem("hr_user", JSON.stringify(authUser));
     setUser(authUser);
     router.replace("/dashboard"); // ← fix: ke dashboard bukan screening
   }
 
   function logout() {
-    localStorage.removeItem("sm_user");
+    localStorage.removeItem("hr_user");
     setUser(null);
     router.replace("/login");
   }

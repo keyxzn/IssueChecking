@@ -3,7 +3,7 @@ const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 function getToken(): string {
   if (typeof window === "undefined") return "";
   try {
-    const u = localStorage.getItem("sm_user");
+    const u = localStorage.getItem("hr_user");
     if (!u) return "";
     const parsed = JSON.parse(u);
     return parsed.token ?? parsed.access_token ?? "";
@@ -20,7 +20,7 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
     ...opts,
   });
   if (res.status === 401) {
-    localStorage.removeItem("sm_user");
+    localStorage.removeItem("hr_user");
     window.location.href = "/login";
     throw new Error("Sesi berakhir, silakan login ulang.");
   }
@@ -31,54 +31,68 @@ async function req<T>(path: string, opts?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// "Candidate" di backend tetap sama strukturnya, kita hanya rename di frontend
 export interface IssueCreate {
-  keyword: string;
+  full_name: string;   // nama issue / keyword / tokoh
+  email: string;       // identifier (bisa dummy/internal)
+  phone?: string;      // opsional
   instagram_url?: string;
   twitter_url?: string;
   facebook_url?: string;
-  tiktok_url?: string;
-  youtube_url?: string;
-  consent_given?: boolean;
+  linkedin_url?: string;
+  consent_given: boolean;
 }
 export interface Issue {
-  id: string; keyword: string;
+  id: string;
+  full_name: string;   // nama issue / keyword
+  email: string;
+  phone?: string;
   instagram_url?: string;
   twitter_url?: string;
   facebook_url?: string;
-  tiktok_url?: string;
-  youtube_url?: string;
+  linkedin_url?: string;
   created_at: string;
 }
 export interface MonitoringReport {
-  id: string; issue_id: string;
+  id: string;
+  candidate_id: string;  // = issue_id di backend
   status: "pending" | "processing" | "completed" | "failed";
   overall_risk?: "low" | "medium" | "high" | "critical";
   risk_scores?: Record<string, number>;
   found_profiles?: Record<string, string>;
   flagged_content?: Array<{
-    platform: string; content_snippet: string;
-    category: string; severity: string; source_url?: string;
+    platform: string;
+    content_snippet: string;
+    category: string;
+    severity: string;
+    source_url?: string;
   }>;
-  ai_summary?: string; error_message?: string;
-  created_at: string; completed_at?: string;
-  assessment_status?: "relevant" | "irrelevant";
+  ai_summary?: string;
+  error_message?: string;
+  created_at: string;
+  completed_at?: string;
+  assessment_status?: "appropriate" | "inappropriate";
   assessed_by?: string;
   assessed_by_name?: string;
   assessed_at?: string;
 }
 
+// Alias lama agar backward compat dengan komponen yang belum kita ubah
+export type Candidate = Issue;
+export type ScreeningReport = MonitoringReport;
+
 export const api = {
-  createIssue:  (data: IssueCreate) =>
-    req<Issue>("/issues/", { method: "POST", body: JSON.stringify(data) }),
-  listIssues:   () => req<Issue[]>("/issues/"),
-  getIssue:     (id: string) => req<Issue>(`/issues/${id}`),
-  deleteIssue:  (id: string) => req<{ message: string }>(`/issues/${id}`, { method: "DELETE" }),
-  getReport:    (issueId: string) => req<MonitoringReport>(`/reports/${issueId}`),
+  createCandidate: (data: IssueCreate) =>
+    req<Issue>("/candidates/", { method: "POST", body: JSON.stringify(data) }),
+  listCandidates: () => req<Issue[]>("/candidates/"),
+  getCandidate:   (id: string) => req<Issue>(`/candidates/${id}`),
+  deleteCandidate:(id: string) => req<{ message: string }>(`/candidates/${id}`, { method: "DELETE" }),
+  getReport:      (issueId: string) => req<MonitoringReport>(`/reports/${issueId}`),
 };
 
 // ── Assessment ────────────────────────────────────────
 export interface AssessmentUpdate {
-  assessment_status: "relevant" | "irrelevant";
+  assessment_status: "appropriate" | "inappropriate";
 }
 export const assessReport = (reportId: string, data: AssessmentUpdate) =>
   req<MonitoringReport>(`/reports/${reportId}/assess`, {
@@ -87,7 +101,7 @@ export const assessReport = (reportId: string, data: AssessmentUpdate) =>
   });
 
 // ── User Management ───────────────────────────────────
-export interface AppUser {
+export interface HRUser {
   id: string; email: string; full_name: string;
   role: string; is_active: boolean; created_at: string;
 }
@@ -99,8 +113,8 @@ export interface UserUpdate {
   role?: string; is_active?: boolean;
 }
 export const userApi = {
-  list:   ()                          => req<AppUser[]>("/users/"),
-  create: (d: UserCreate)             => req<AppUser>("/users/", { method: "POST", body: JSON.stringify(d) }),
-  update: (id: string, d: UserUpdate) => req<AppUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(d) }),
+  list:   ()                          => req<HRUser[]>("/users/"),
+  create: (d: UserCreate)             => req<HRUser>("/users/", { method: "POST", body: JSON.stringify(d) }),
+  update: (id: string, d: UserUpdate) => req<HRUser>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(d) }),
   delete: (id: string)                => req<{ message: string }>(`/users/${id}`, { method: "DELETE" }),
 };

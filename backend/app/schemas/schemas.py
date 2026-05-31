@@ -1,30 +1,39 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, HttpUrl, field_validator
 from typing import Any
 from datetime import datetime
-from app.models.models import RiskLevel, MonitoringStatus
+from app.models.models import RiskLevel, ScreeningStatus
 
 
-# ─── Issue ───────────────────────────────────────────
+# ─── Candidate ───────────────────────────────────────────
 
-class IssueCreate(BaseModel):
-    keyword: str
+class CandidateCreate(BaseModel):
+    full_name: str  # Issue/keyword name
+    email: str  # auto-generated if not provided by frontend
+    phone: str | None = None
+    linkedin_url: str | None = None
     instagram_url: str | None = None
     twitter_url: str | None = None
     facebook_url: str | None = None
-    tiktok_url: str | None = None
-    youtube_url: str | None = None
-    consent_given: bool = True
+    consent_given: bool
 
-    @field_validator("keyword")
+    @field_validator("consent_given")
     @classmethod
-    def keyword_not_empty(cls, v: str) -> str:
+    def must_consent(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("Candidate consent is required before screening")
+        return v
+
+    @field_validator("full_name")
+    @classmethod
+    def name_not_empty(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("Keyword tidak boleh kosong")
+            raise ValueError("Full name cannot be empty")
         return v.strip()
 
-    @field_validator("instagram_url", "twitter_url", "facebook_url", "tiktok_url", "youtube_url", mode="before")
+    @field_validator("instagram_url", "twitter_url", "facebook_url", "linkedin_url", mode="before")
     @classmethod
     def empty_str_to_none(cls, v):
+        """Convert empty string or placeholder to None."""
         if v is None:
             return None
         s = str(v).strip().lower()
@@ -32,15 +41,26 @@ class IssueCreate(BaseModel):
             return None
         return str(v).strip()
 
+    @field_validator("phone", mode="before")
+    @classmethod
+    def clean_phone(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if s in ("", "tidak ada", "none", "-"):
+            return None
+        return s
 
-class IssueResponse(BaseModel):
+
+class CandidateResponse(BaseModel):
     id: str
-    keyword: str
+    full_name: str  # Issue/keyword name
+    email: str
+    phone: str | None
+    linkedin_url: str | None
     instagram_url: str | None
     twitter_url: str | None
     facebook_url: str | None
-    tiktok_url: str | None
-    youtube_url: str | None
     consent_given: bool
     created_at: datetime
 
@@ -50,12 +70,12 @@ class IssueResponse(BaseModel):
 # ─── Report ──────────────────────────────────────────────
 
 class RiskScores(BaseModel):
-    explicit_content: float = 0.0
+    explicit_content: float = 0.0      # 0-100
     toxic_language: float = 0.0
     hate_speech: float = 0.0
     violence: float = 0.0
     extremism: float = 0.0
-    misinformation: float = 0.0
+    professional_risk: float = 0.0
 
 
 class FlaggedItem(BaseModel):
@@ -67,13 +87,12 @@ class FlaggedItem(BaseModel):
 
 
 class AssessmentUpdate(BaseModel):
-    assessment_status: str  # relevant | irrelevant
-
-
-class MonitoringReportResponse(BaseModel):
+    assessment_status: str  # appropriate | inappropriate
+    
+class ScreeningReportResponse(BaseModel):
     id: str
-    issue_id: str
-    status: MonitoringStatus
+    candidate_id: str
+    status: ScreeningStatus
     overall_risk: RiskLevel | None
     risk_scores: dict[str, float] | None
     found_profiles: dict[str, Any] | None
@@ -96,17 +115,17 @@ class MessageResponse(BaseModel):
     data: Any | None = None
 
 
-# ─── User Management ─────────────────────────────────────
+# ─── User Management (No. 7 BCA request) ─────────────────
 
 class UserCreate(BaseModel):
-    email: str
-    full_name: str
+    email: EmailStr
+    full_name: str  # Issue/keyword name
     password: str
-    role: str = "analyst"
+    role: str = "hr"
 
 class UserUpdate(BaseModel):
     full_name: str | None = None
-    email: str | None = None
+    email: EmailStr | None = None
     password: str | None = None
     role: str | None = None
     is_active: bool | None = None
@@ -114,7 +133,7 @@ class UserUpdate(BaseModel):
 class UserResponse(BaseModel):
     id: str
     email: str
-    full_name: str
+    full_name: str  # Issue/keyword name
     role: str
     is_active: bool
     created_at: datetime

@@ -38,7 +38,7 @@ async def generate_pdf_report(report: ScreeningReport) -> bytes:
     title_style = ParagraphStyle("title", parent=styles["Title"], fontSize=20, spaceAfter=4)
     sub_style = ParagraphStyle("sub", parent=styles["Normal"], fontSize=10, textColor=colors.gray)
 
-    story.append(Paragraph("Issues Checker Report", title_style))
+    story.append(Paragraph("HR Candidate Screening Report", title_style))
     story.append(Paragraph(f"Generated: {datetime.utcnow().strftime('%d %B %Y, %H:%M UTC')}", sub_style))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.lightgrey, spaceAfter=12))
 
@@ -102,7 +102,7 @@ async def generate_pdf_report(report: ScreeningReport) -> bytes:
     )
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.lightgrey, spaceBefore=8))
     story.append(Paragraph(
-        "DISCLAIMER: This report is based solely on publicly available information collected with issues consent. "
+        "DISCLAIMER: This report is based solely on publicly available information collected with candidate consent. "
         "It is intended to supplement, not replace, human judgment in hiring decisions. This tool does not discriminate "
         "based on protected characteristics. All data processed in compliance with UU PDP (Indonesia) and applicable regulations.",
         disclaimer_style,

@@ -58,7 +58,7 @@ def _get_keys():
 
 
 # ─────────────────────────────────────────────────────────────
-# GOOGLE — keyword per kategori risiko media
+# GOOGLE — nama issue/keyword per kategori risiko
 # ─────────────────────────────────────────────────────────────
 async def scrape_google(name: str, phone: str | None = None) -> dict:
     api_key, cx = _get_keys()
